@@ -10,29 +10,9 @@
         h2 { color: #d35400; text-align: center; margin-top: 0; }
         label { display: block; margin-top: 15px; font-weight: bold; color: #444; font-size: 0.9rem; }
         input, select { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
-        
-        .price-box { 
-            margin-top: 20px; 
-            padding: 15px; 
-            background: #fff3e0; 
-            border-left: 5px solid #e67e22; 
-            border-radius: 5px; 
-        }
+        .price-box { margin-top: 20px; padding: 15px; background: #fff3e0; border-left: 5px solid #e67e22; border-radius: 5px; }
         .total-row { font-size: 1.3rem; color: #d35400; font-weight: bold; margin-top: 5px; }
-        
-        button { 
-            width: 100%; 
-            padding: 15px; 
-            margin-top: 25px; 
-            background: #27ae60; 
-            color: white; 
-            border: none; 
-            border-radius: 8px; 
-            font-size: 1.1rem; 
-            font-weight: bold; 
-            cursor: pointer; 
-            transition: 0.3s; 
-        }
+        button { width: 100%; padding: 15px; margin-top: 25px; background: #27ae60; color: white; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.3s; }
         button:hover { background: #219150; }
         button:disabled { background: #ccc; cursor: not-allowed; }
     </style>
@@ -68,10 +48,16 @@
         <input type="number" name="Quantity" id="quantity" min="1" value="1" required>
 
         <label>Payment Method</label>
-        <select name="PaymentMethod">
+        <select name="PaymentMethod" onchange="checkPayment(this.value)">
             <option value="Cash on Delivery">Cash on Delivery</option>
-            <option value="Online Paid (9322449900)">Online Paid (9322449900)</option>
+            <option value="Online Paid">Online Paid (UPI: 2348593349)</option>
         </select>
+
+        <div id="paymentInstructions" style="display:none; margin-top: 10px; padding: 10px; background: #e3f2fd; border-radius: 8px; border: 1px solid #2196f3; font-size: 0.85rem;">
+            <strong>Payment Details:</strong><br>
+            Please pay via UPI to: <b>2348593349</b><br>
+            <i>(Kindly share the screenshot on WhatsApp after payment)</i>
+        </div>
 
         <div class="price-box">
             <small>Price per Dozen: ₹<span id="unitPrice">800</span></small>
@@ -79,88 +65,75 @@
         </div>
 
         <input type="hidden" name="TotalPrice" id="hiddenPrice" value="800">
-
         <button type="submit" id="submitBtn">Place Order</button>
     </form>
 </div>
 
 <script>
-    // 1. YOUR GOOGLE WEB APP URL
     const scriptURL = 'https://script.google.com/macros/s/AKfycbwkGWLVAWrFvo6jyY32dB_VD1F-_ILZzjoc0I0eldlBrRcw2zmK-67PYuQG4E1CqwLS8Q/exec'; 
 
-    // 2. PRICE CONFIGURATION
     const prices = {
         "Ratnagiri": 800,
         "Devgad": 825
     };
 
-    const form = document.getElementById('mangoForm');
-    const societySelect = document.getElementById('societySelect');
-    const manualSocietyInput = document.getElementById('manualSociety');
-    const typeSelect = document.getElementById('mangoType');
-    const qtyInput = document.getElementById('quantity');
-    const unitPriceSpan = document.getElementById('unitPrice');
-    const displayPriceSpan = document.getElementById('displayPrice');
-    const hiddenPriceInput = document.getElementById('hiddenPrice');
-
-    // Handle Society Dropdown Logic
     function checkSociety(val) {
+        const manualInput = document.getElementById('manualSociety');
         if (val === 'Other') {
-            manualSocietyInput.style.display = 'block';
-            manualSocietyInput.value = ''; 
-            manualSocietyInput.required = true;
+            manualInput.style.display = 'block';
+            manualInput.value = ''; 
+            manualInput.required = true;
         } else {
-            manualSocietyInput.style.display = 'none';
-            manualSocietyInput.value = val; 
-            manualSocietyInput.required = false;
+            manualInput.style.display = 'none';
+            manualInput.value = val; 
+            manualInput.required = false;
         }
     }
 
-    // Function to calculate and update price
-    function calculatePrice() {
-        const selectedType = typeSelect.value;
-        const pricePerDozen = prices[selectedType] || 0;
-        const total = qtyInput.value * pricePerDozen;
-
-        unitPriceSpan.innerText = pricePerDozen;
-        displayPriceSpan.innerText = total;
-        hiddenPriceInput.value = total;
+    function checkPayment(val) {
+        const box = document.getElementById('paymentInstructions');
+        box.style.display = (val === 'Online Paid') ? 'block' : 'none';
     }
 
-    // Listen for changes
+    const form = document.getElementById('mangoForm');
+    const typeSelect = document.getElementById('mangoType');
+    const qtyInput = document.getElementById('quantity');
+
+    function calculatePrice() {
+        const pricePerDozen = prices[typeSelect.value] || 0;
+        const total = qtyInput.value * pricePerDozen;
+        document.getElementById('unitPrice').innerText = pricePerDozen;
+        document.getElementById('displayPrice').innerText = total;
+        document.getElementById('hiddenPrice').value = total;
+    }
+
     typeSelect.addEventListener('change', calculatePrice);
     qtyInput.addEventListener('input', calculatePrice);
 
-    // Form Submission
     form.addEventListener('submit', e => {
         e.preventDefault();
-        
-        // Ensure the manualSociety input has the correct value before sending
-        if (societySelect.value !== 'Other') {
-            manualSocietyInput.value = societySelect.value;
+        if (document.getElementById('societySelect').value !== 'Other') {
+            document.getElementById('manualSociety').value = document.getElementById('societySelect').value;
         }
-
         const btn = document.getElementById('submitBtn');
         btn.innerHTML = "Processing...";
         btn.disabled = true;
 
         fetch(scriptURL, { method: 'POST', body: new FormData(form)})
             .then(response => {
-                alert("Success! Your order has been recorded in the sheet.");
+                alert("Success! Your order has been recorded.");
                 form.reset();
-                manualSocietyInput.style.display = 'none'; // Hide manual box again
-                calculatePrice(); // Reset price display
+                document.getElementById('paymentInstructions').style.display = 'none';
+                calculatePrice();
                 btn.innerHTML = "Place Order";
                 btn.disabled = false;
             })
             .catch(error => {
-                alert("Error! Please check your Google Script URL or Internet.");
-                console.error('Error!', error.message);
+                alert("Error! Check internet.");
                 btn.disabled = false;
                 btn.innerHTML = "Place Order";
             });
     });
 </script>
-
 </body>
 </html>
