@@ -33,10 +33,13 @@
             <option value="Malpani Greens">Malpani Greens</option>
             <option value="Other">Other</option>
         </select>
-        <input type="text" name="SocietyName" id="manualSociety" placeholder="Enter Society Name" style="display:none; margin-top: 10px;">
+        <input type="text" name="SocietyName" id="manualSociety" style="display:none; margin-top: 10px;">
 
         <label>Full Name</label>
         <input type="text" name="Name" placeholder="Enter your name" required>
+
+        <label>Phone Number</label>
+        <input type="tel" name="Phone" placeholder="10-digit mobile number" pattern="[0-9]{10}" required>
         
         <label>Select Variety</label>
         <select name="MangoType" id="mangoType">
@@ -50,12 +53,12 @@
         <label>Payment Method</label>
         <select name="PaymentMethod" onchange="checkPayment(this.value)">
             <option value="Cash on Delivery">Cash on Delivery</option>
-            <option value="Online Paid">Online Paid (UPI: 9322449900)</option>
+            <option value="Online Paid">Online Paid (UPI: 2348593349)</option>
         </select>
 
         <div id="paymentInstructions" style="display:none; margin-top: 10px; padding: 10px; background: #e3f2fd; border-radius: 8px; border: 1px solid #2196f3; font-size: 0.85rem;">
             <strong>Payment Details:</strong><br>
-            Please pay via UPI to: <b>9322449900</b><br>
+            Please pay via UPI to: <b>2348593349</b><br>
             <i>(Kindly share the screenshot on WhatsApp after payment)</i>
         </div>
 
@@ -72,43 +75,36 @@
 <script>
     const scriptURL = 'https://script.google.com/macros/s/AKfycbwkGWLVAWrFvo6jyY32dB_VD1F-_ILZzjoc0I0eldlBrRcw2zmK-67PYuQG4E1CqwLS8Q/exec'; 
 
-    const prices = {
-        "Ratnagiri": 800,
-        "Devgad": 825
-    };
+    const prices = { "Ratnagiri": 800, "Devgad": 825 };
 
     function checkSociety(val) {
         const manualInput = document.getElementById('manualSociety');
         if (val === 'Other') {
             manualInput.style.display = 'block';
-            manualInput.value = ''; 
             manualInput.required = true;
         } else {
             manualInput.style.display = 'none';
-            manualInput.value = val; 
+            manualInput.value = val;
             manualInput.required = false;
         }
     }
 
     function checkPayment(val) {
-        const box = document.getElementById('paymentInstructions');
-        box.style.display = (val === 'Online Paid') ? 'block' : 'none';
+        document.getElementById('paymentInstructions').style.display = (val === 'Online Paid') ? 'block' : 'none';
     }
 
     const form = document.getElementById('mangoForm');
-    const typeSelect = document.getElementById('mangoType');
-    const qtyInput = document.getElementById('quantity');
-
     function calculatePrice() {
-        const pricePerDozen = prices[typeSelect.value] || 0;
-        const total = qtyInput.value * pricePerDozen;
-        document.getElementById('unitPrice').innerText = pricePerDozen;
+        const type = document.getElementById('mangoType').value;
+        const qty = document.getElementById('quantity').value;
+        const total = qty * prices[type];
+        document.getElementById('unitPrice').innerText = prices[type];
         document.getElementById('displayPrice').innerText = total;
         document.getElementById('hiddenPrice').value = total;
     }
 
-    typeSelect.addEventListener('change', calculatePrice);
-    qtyInput.addEventListener('input', calculatePrice);
+    document.getElementById('mangoType').addEventListener('change', calculatePrice);
+    document.getElementById('quantity').addEventListener('input', calculatePrice);
 
     form.addEventListener('submit', e => {
         e.preventDefault();
@@ -121,9 +117,10 @@
 
         fetch(scriptURL, { method: 'POST', body: new FormData(form)})
             .then(response => {
-                alert("Success! Your order has been recorded.");
+                alert("Success! Now sending you to WhatsApp to share your order details.");
+                // Redirect to WhatsApp
+                window.open("https://wa.me/2348593349?text=Hi, I just placed a mango order!", "_blank");
                 form.reset();
-                document.getElementById('paymentInstructions').style.display = 'none';
                 calculatePrice();
                 btn.innerHTML = "Place Order";
                 btn.disabled = false;
@@ -131,7 +128,6 @@
             .catch(error => {
                 alert("Error! Check internet.");
                 btn.disabled = false;
-                btn.innerHTML = "Place Order";
             });
     });
 </script>
