@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mango Society Sales</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #fffcf0; display: flex; justify-content: center; padding: 20px; }
+        .card { width: 100%; max-width: 450px; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        h2 { color: #d35400; text-align: center; margin-top: 0; }
+        label { display: block; margin-top: 15px; font-weight: bold; color: #444; font-size: 0.9rem; }
+        input, select { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
+        
+        .price-box { 
+            margin-top: 20px; 
+            padding: 15px; 
+            background: #fff3e0; 
+            border-left: 5px solid #e67e22; 
+            border-radius: 5px; 
+        }
+        .total-row { font-size: 1.3rem; color: #d35400; font-weight: bold; margin-top: 5px; }
+        
+        button { 
+            width: 100%; 
+            padding: 15px; 
+            margin-top: 25px; 
+            background: #27ae60; 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 1.1rem; 
+            font-weight: bold; 
+            cursor: pointer; 
+            transition: 0.3s; 
+        }
+        button:hover { background: #219150; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <form id="mangoForm">
+        <h2>🥭 Society Mango Order</h2>
+        
+        <label>Society Name</label>
+        <select id="societySelect" onchange="checkSociety(this.value)" required>
+            <option value="">-- Select Your Society --</option>
+            <option value="Capriccio Society">Capriccio Society</option>
+            <option value="La Melosa">La Melosa</option>
+            <option value="Lakeshore">Lakeshore</option>
+            <option value="Mont Vert">Mont Vert</option>
+            <option value="Malpani Greens">Malpani Greens</option>
+            <option value="Other">Other</option>
+        </select>
+        <input type="text" name="SocietyName" id="manualSociety" placeholder="Enter Society Name" style="display:none; margin-top: 10px;">
+
+        <label>Full Name</label>
+        <input type="text" name="Name" placeholder="Enter your name" required>
+        
+        <label>Select Variety</label>
+        <select name="MangoType" id="mangoType">
+            <option value="Ratnagiri">Ratnagiri Hapus</option>
+            <option value="Devgad">Devgad Hapus</option>
+        </select>
+
+        <label>Quantity (Dozen)</label>
+        <input type="number" name="Quantity" id="quantity" min="1" value="1" required>
+
+        <label>Payment Method</label>
+        <select name="PaymentMethod">
+            <option value="Cash on Delivery">Cash on Delivery</option>
+            <option value="Online Paid">Online Paid</option>
+        </select>
+
+        <div class="price-box">
+            <small>Price per Dozen: ₹<span id="unitPrice">800</span></small>
+            <div class="total-row">Total: ₹<span id="displayPrice">800</span></div>
+        </div>
+
+        <input type="hidden" name="TotalPrice" id="hiddenPrice" value="800">
+
+        <button type="submit" id="submitBtn">Place Order</button>
+    </form>
+</div>
+
+<script>
+    // 1. YOUR GOOGLE WEB APP URL
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbwkGWLVAWrFvo6jyY32dB_VD1F-_ILZzjoc0I0eldlBrRcw2zmK-67PYuQG4E1CqwLS8Q/exec'; 
+
+    // 2. PRICE CONFIGURATION
+    const prices = {
+        "Ratnagiri": 800,
+        "Devgad": 825
+    };
+
+    const form = document.getElementById('mangoForm');
+    const societySelect = document.getElementById('societySelect');
+    const manualSocietyInput = document.getElementById('manualSociety');
+    const typeSelect = document.getElementById('mangoType');
+    const qtyInput = document.getElementById('quantity');
+    const unitPriceSpan = document.getElementById('unitPrice');
+    const displayPriceSpan = document.getElementById('displayPrice');
+    const hiddenPriceInput = document.getElementById('hiddenPrice');
+
+    // Handle Society Dropdown Logic
+    function checkSociety(val) {
+        if (val === 'Other') {
+            manualSocietyInput.style.display = 'block';
+            manualSocietyInput.value = ''; 
+            manualSocietyInput.required = true;
+        } else {
+            manualSocietyInput.style.display = 'none';
+            manualSocietyInput.value = val; 
+            manualSocietyInput.required = false;
+        }
+    }
+
+    // Function to calculate and update price
+    function calculatePrice() {
+        const selectedType = typeSelect.value;
+        const pricePerDozen = prices[selectedType] || 0;
+        const total = qtyInput.value * pricePerDozen;
+
+        unitPriceSpan.innerText = pricePerDozen;
+        displayPriceSpan.innerText = total;
+        hiddenPriceInput.value = total;
+    }
+
+    // Listen for changes
+    typeSelect.addEventListener('change', calculatePrice);
+    qtyInput.addEventListener('input', calculatePrice);
+
+    // Form Submission
+    form.addEventListener('submit', e => {
+        e.preventDefault();
+        
+        // Ensure the manualSociety input has the correct value before sending
+        if (societySelect.value !== 'Other') {
+            manualSocietyInput.value = societySelect.value;
+        }
+
+        const btn = document.getElementById('submitBtn');
+        btn.innerHTML = "Processing...";
+        btn.disabled = true;
+
+        fetch(scriptURL, { method: 'POST', body: new FormData(form)})
+            .then(response => {
+                alert("Success! Your order has been recorded in the sheet.");
+                form.reset();
+                manualSocietyInput.style.display = 'none'; // Hide manual box again
+                calculatePrice(); // Reset price display
+                btn.innerHTML = "Place Order";
+                btn.disabled = false;
+            })
+            .catch(error => {
+                alert("Error! Please check your Google Script URL or Internet.");
+                console.error('Error!', error.message);
+                btn.disabled = false;
+                btn.innerHTML = "Place Order";
+            });
+    });
+</script>
+
+</body>
+</html>
