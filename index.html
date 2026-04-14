@@ -51,8 +51,8 @@
         <input type="number" name="Quantity" id="quantity" min="1" value="1" required>
 
         <label>Payment Method</label>
-        <select name="PaymentMethod" onchange="checkPayment(this.value)">
-            <option value="Cash on Delivery">Cash on Delivery</option>
+        <select name="PaymentMethod" id="paymentMethod" onchange="checkPayment(this.value)">
+            <option value="Payment on Delivery">Payment on Delivery</option>
             <option value="Online Paid">Online Paid (UPI: 9322449900)</option>
         </select>
 
@@ -117,10 +117,18 @@
 
         fetch(scriptURL, { method: 'POST', body: new FormData(form)})
             .then(response => {
-                alert("Success! Now sending you to WhatsApp to share your order details.");
-                // Redirect to WhatsApp
-                window.open("https://wa.me/9322449900?text=Hi, I just placed a prepaid mango order!, here is the screenshot", "_blank");
+                const payMethod = document.getElementById('paymentMethod').value;
+                
+                if (payMethod === 'Online Paid') {
+                    alert("Order Recorded! Redirecting to WhatsApp for payment screenshot.");
+                    window.open("https://wa.me/7709999264?text=Hi, I just placed a prepaid mango order!, here is the screenshot", "_blank");
+                } else {
+                    alert("Thank you! Your Payment on Delivery order has been successfully recorded.");
+                }
+
                 form.reset();
+                document.getElementById('paymentInstructions').style.display = 'none';
+                document.getElementById('manualSociety').style.display = 'none';
                 calculatePrice();
                 btn.innerHTML = "Place Order";
                 btn.disabled = false;
@@ -128,6 +136,7 @@
             .catch(error => {
                 alert("Error! Check internet.");
                 btn.disabled = false;
+                btn.innerHTML = "Place Order";
             });
     });
 </script>
